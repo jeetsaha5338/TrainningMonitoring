@@ -1,7 +1,7 @@
-package com.example.exptrainning.service;
+package com.example.exptraining.service;
 
-import com.example.exptrainning.model.Topic;
-import com.example.exptrainning.repository.TopicRepository;
+import com.example.exptraining.model.Topic;
+import com.example.exptraining.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

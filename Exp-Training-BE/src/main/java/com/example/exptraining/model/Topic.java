@@ -1,7 +1,9 @@
-package com.example.exptrainning.model;
+package com.example.exptraining.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
 
 @Document(collection = "Topic")
 public class Topic {
@@ -9,12 +11,12 @@ public class Topic {
     private int id;
     private String topicName;
     private String category;
-    private String duration;
+    private double duration;
     private String startData;
     private String endData;
     private String trainerType; //external/internal/self
-    private String[] trainers;
-    private String[] attendies;
+    private List<String> trainers;
+    private List<String> attendees;
     private String teamName;
     private String remarks;
 
@@ -42,11 +44,11 @@ public class Topic {
         this.category = category;
     }
 
-    public String getDuration() {
+    public double getDuration() {
         return duration;
     }
 
-    public void setDuration(String duration) {
+    public void setDuration(double duration) {
         this.duration = duration;
     }
 
@@ -74,20 +76,20 @@ public class Topic {
         this.trainerType = trainerType;
     }
 
-    public String[] getTrainers() {
+    public List<String> getTrainers() {
         return trainers;
     }
 
-    public void setTrainers(String[] trainers) {
+    public void setTrainers(List<String> trainers) {
         this.trainers = trainers;
     }
 
-    public String[] getAttendies() {
-        return attendies;
+    public List<String> getAttendees() {
+        return attendees;
     }
 
-    public void setAttendies(String[] attendies) {
-        this.attendies = attendies;
+    public void setAttendees(List<String> attendees) {
+        this.attendees = attendees;
     }
 
     public String getTeamName() {

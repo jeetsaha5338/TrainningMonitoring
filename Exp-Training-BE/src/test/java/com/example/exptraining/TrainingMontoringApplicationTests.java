@@ -1,10 +1,10 @@
-package com.example.exptrainning;
+package com.example.exptraining;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class TrainningDetailsApplicationTests {
+class TrainingMontoringApplicationTests {
 
 	@Test
 	void contextLoads() {
