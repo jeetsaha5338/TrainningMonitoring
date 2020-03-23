@@ -28,7 +28,7 @@ public class TopicController {
         for (int i = 0; i < count; i++) {
             topic.setId(100+i);
             topic.setTopicName("React");
-            topic.setCategory("Front-End");
+            topic.setCategory("Technical");
             topic.setDuration(4);
             topic.setStartData("10-04-2019");
             topic.setEndData("23-06-2019");
@@ -43,8 +43,8 @@ public class TopicController {
         }
         for (int i = 0; i < count; i++) {
             topic.setId(200+i);
-            topic.setTopicName("SpringBoot");
-            topic.setCategory("Back-End");
+            topic.setTopicName("JIRA");
+            topic.setCategory("Organizational");
             topic.setDuration(5.5);
             topic.setStartData("04-11-2019");
             topic.setEndData("18-02-2020");

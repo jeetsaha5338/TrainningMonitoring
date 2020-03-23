@@ -10,11 +10,11 @@ public class Topic {
     @Id
     private int id;
     private String topicName;
-    private String category;
+    private String category;     // Technical / Behavioural / Domain Specific / Organizational
     private double duration;
     private String startData;
     private String endData;
-    private String trainerType; //external/internal/self
+    private String trainerType; //  External  /  Internal  /  Self
     private List<String> trainers;
     private List<String> attendees;
     private String teamName;
