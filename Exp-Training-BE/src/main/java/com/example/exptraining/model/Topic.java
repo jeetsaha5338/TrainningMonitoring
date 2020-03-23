@@ -12,8 +12,8 @@ public class Topic {
     private String topicName;
     private String category;     // Technical / Behavioural / Domain Specific / Organizational
     private double duration;
-    private String startData;
-    private String endData;
+    private String startDate;
+    private String endDate;
     private String trainerType; //  External  /  Internal  /  Self
     private List<String> trainers;
     private List<String> attendees;
@@ -52,20 +52,20 @@ public class Topic {
         this.duration = duration;
     }
 
-    public String getStartData() {
-        return startData;
+    public String getStartDate() {
+        return startDate;
     }
 
-    public void setStartData(String startData) {
-        this.startData = startData;
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
     }
 
-    public String getEndData() {
-        return endData;
+    public String getEndDate() {
+        return endDate;
     }
 
-    public void setEndData(String endData) {
-        this.endData = endData;
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
     }
 
     public String getTrainerType() {

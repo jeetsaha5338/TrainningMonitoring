@@ -30,8 +30,8 @@ public class TopicController {
             topic.setTopicName("React");
             topic.setCategory("Technical");
             topic.setDuration(4);
-            topic.setStartData("10-04-2019");
-            topic.setEndData("23-06-2019");
+            topic.setStartDate("10-04-2019");
+            topic.setEndDate("23-06-2019");
             topic.setTrainerType("Internal");
             tempList.clear();tempList.add("Jeet");tempList.add("Suman");
             topic.setTrainers(tempList);
@@ -46,8 +46,8 @@ public class TopicController {
             topic.setTopicName("JIRA");
             topic.setCategory("Organizational");
             topic.setDuration(5.5);
-            topic.setStartData("04-11-2019");
-            topic.setEndData("18-02-2020");
+            topic.setStartDate("04-11-2019");
+            topic.setEndDate("18-02-2020");
             topic.setTrainerType("External");
             tempList.clear();tempList.add("Youtube");tempList.add("Udemy");
             topic.setTrainers(tempList);
