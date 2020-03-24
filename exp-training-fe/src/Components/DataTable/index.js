@@ -8,7 +8,6 @@ export default class DataTable extends React.Component {
 
     constructor(props) {
         super(props);
-
         this.state = {
             title: props.title || 'Data-Table',
             headers: props.headers,
@@ -72,13 +71,13 @@ export default class DataTable extends React.Component {
             return (
                 <th key={accessor}
                     ref={(th) => this[accessor] = th}
-                    style={{ width: width }}
+                    style={{ width: width, textAlign : "center" }}
                     data-col={accessor}
                     // onDoubleClick = {()=>{alert('Double Click');}}
                     onDragStart={(e) => this.onDragStart(e, index)}
                     onDragOver={this.onDragOver}
                     onDrop={(e) => { this.onDrop(e, index) }}>
-                    <span draggable data-col={accessor} className="header-cell" style={{ width: width }}>
+                    <span draggable data-col={accessor} className="header-cell" style={{ width: width, textAlign: "center" }}>
                         {title}
                     </span>
                 </th>
@@ -133,15 +132,14 @@ export default class DataTable extends React.Component {
 
     renderContent = () => {
 
-        let { headers, data } = this.state;
-        data = this.pagination.enabled ? this.state.pagedData : this.state.data;
-
+        let { headers, data, pagedData } = this.state;
+        data = this.pagination.enabled ? pagedData : data;
         let contentView = data.map((row, rowIdx) => {
             let id = row[this.keyField];
             // let edit = this.state.edit;
 
             let tds = headers.map((header, index) => {
-                let content = row[header.accessor];
+                let contents = row[header.accessor];
 
                 /* if (this.props.edit) {
                     if (header.dataType && (header.dataType === "number" ||
@@ -161,16 +159,22 @@ export default class DataTable extends React.Component {
 
                 return (
                     <td key={index} data-id={id} data-row={rowIdx}>
-                        {content} {(header.accessor === 'duration')? ' Hours' : ''}
+                        {(header.accessor === 'trainers' || header.accessor === 'attendees') ?
+                            contents.map((content) => (
+                                content + ", "
+                            )) :
+                            contents}
+                        {(header.accessor === 'duration') ? ' Hours' : ''}
                     </td>
                 );
             });
             return (
-                <tr key={rowIdx}>
+                <tr key={rowIdx} style={{textAlign : "center"}}>
                     {tds}
                 </tr>
             );
         });
+        // console.log(contentView.length);
         return contentView;
     }
 
@@ -210,7 +214,6 @@ export default class DataTable extends React.Component {
 
     onSearch = (e) => {
         let { headers } = this.state;
-
         // Filter the records
         let searchData = this._preSearchData.filter((row) => {
             let show = true;
@@ -219,16 +222,24 @@ export default class DataTable extends React.Component {
                 let fieldValue = row[fieldName];
                 let inputId = 'inp' + fieldName;
                 let inputText = this[inputId].value;
-                if (!fieldValue === '') {
+
+                if (fieldValue === '') {//If FieldValue Not Present                
                     show = true;
                 } else {
-                    show = fieldValue.toString().toLowerCase().indexOf(inputText.toLowerCase()) > -1;
-                    if (!show) break;
+                    if (headers[i].searchType === "list") {
+                        show = (inputText === '' || fieldValue.toString() === inputText);
+                    } else {
+                        show = fieldValue.toString().toLowerCase().indexOf(inputText.toLowerCase()) > -1;                        
+                    }
+                    // show = fieldValue.toString().toLowerCase().indexOf(inputText.toLowerCase()) > -1;
+                    if (!show) {//FieldValue Present Still no Match Then Cut the Data
+                        break;
+                    }
                 }
             }
             return show;
         });
-        // UPdate the state
+        // Update the state
         this.setState({
             data: searchData,
             pagedData: searchData,
@@ -240,6 +251,14 @@ export default class DataTable extends React.Component {
         });
     }
 
+    createList = (low, high, diff) => {
+        let list = [];
+        for (let i = low; i <= high; i = i + diff) {
+            list.push(i);
+        }
+        return list;
+    }
+
     renderSearch = () => {
         let { search, headers } = this.state;
         if (!search) {
@@ -248,22 +267,46 @@ export default class DataTable extends React.Component {
 
         let searchInputs = headers.map((header, idx) => {
             let inputId = 'inp' + header.accessor;
+            let fixedValue = header.fixedValue || [];
             return (
-                <td key={idx}>
-                    <input type="text"
-                        ref={(input) => this[inputId] = input}
-                        style={{
-                            width: "95px"
+                (header.searchType === 'input') ?
+                    <td key={idx} >
+                        <input type="text" className="form-control"
+                            ref={(input) => this[inputId] = input}
+                            style={{
+                                width: (header.accessor === 'trainers' || header.accessor === 'attendees')?
+                                (parseInt(header.width.toString().split("px")[0])*2)+"px" :
+                                header.width,
+                                textAlign: "center"
+                            }}
+                            data-idx={idx}
+                        />
+                    </td> :
+                    <td key={idx}>
+                        <select ref={(input) => this[inputId] = input} className="btn btn-secondary" style={{
+                            width: header.width,
+                            height : "80%",
+                            textAlign: "center"
                         }}
-                        data-idx={idx}
-                    />
-                </td>
+                        >
+                            {(header.accessor === 'duration') ?
+                                fixedValue = this.createList(0.5, 20, 0.5) :
+                                fixedValue
+                            }
+                            <option value="">Select</option>
+                            {fixedValue.map(val => (
+                                <option className="btn btn-light" key={val} value={val}>
+                                    {val}{(header.accessor === 'duration') ? ' Hours' : ''}
+                                </option>
+                            ))}
+                        </select>
+                    </td>
             );
 
         });
 
         return (
-            <tr onChange={this.onSearch}>
+            <tr onChange={this.onSearch} style={{height : "80%", width : "100%"}}>
                 {searchInputs}
             </tr>
         );
@@ -277,9 +320,6 @@ export default class DataTable extends React.Component {
 
         return (
             <table className="data-inner-table">
-                {/* <caption className="data-table-caption">
-                    {title}
-                </caption> */}
                 <thead onClick={this.onSort} className='thead-dark'>
                     <tr>
                         {headerView}
@@ -298,10 +338,14 @@ export default class DataTable extends React.Component {
             this.setState({
                 data: this._preSearchData,
                 search: false
+            }, () => {
+                this.onGotoPage(1);
             });
             this._preSearchData = null;
+            this.width = "100%";
         } else {
             this._preSearchData = this.state.data;
+            this.width = "80%";
             this.setState({
                 search: true
             });
@@ -333,7 +377,7 @@ export default class DataTable extends React.Component {
     onPageLengthChange = (pageLength) => {
         this.setState({
             pageLength: parseInt(pageLength, 10),
-            currentPage : 1
+            currentPage: 1
         }, () => {
             this.onGotoPage(this.state.currentPage);
         });
@@ -382,7 +426,7 @@ export default class DataTable extends React.Component {
                         onGotoPage={this.onGotoPage}
                         currentPage={this.state.currentPage}
                     />
-                }                
+                }
             </div>
         )
     }

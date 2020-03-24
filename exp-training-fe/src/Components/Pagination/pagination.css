@@ -5,6 +5,7 @@
     left: 2%;
     font-size: 1em;
     color: rgb(110, 107, 107);
+    padding: .5%;
   }
   .current-page {
     background-color: skyblue;
@@ -18,6 +19,7 @@
   
   .page-selector {
     padding: .5%;
+    width: 30%;
   }
   
   .page-selector > input {
@@ -28,4 +30,7 @@
   .current-page-input {
     width: 3em;
     text-align: center;
+    padding-left: 1px;
+    padding-right: 1px;
+    border: slateblue;
   }
