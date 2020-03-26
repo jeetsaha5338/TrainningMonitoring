@@ -71,7 +71,7 @@ export default class DataTable extends React.Component {
             return (
                 <th key={accessor}
                     ref={(th) => this[accessor] = th}
-                    style={{ width: width, textAlign : "center" }}
+                    style={{ width: width, textAlign: "center" }}
                     data-col={accessor}
                     // onDoubleClick = {()=>{alert('Double Click');}}
                     onDragStart={(e) => this.onDragStart(e, index)}
@@ -169,12 +169,11 @@ export default class DataTable extends React.Component {
                 );
             });
             return (
-                <tr key={rowIdx} style={{textAlign : "center"}}>
+                <tr key={rowIdx} style={{ textAlign: "center" }}>
                     {tds}
                 </tr>
             );
         });
-        // console.log(contentView.length);
         return contentView;
     }
 
@@ -217,21 +216,27 @@ export default class DataTable extends React.Component {
         // Filter the records
         let searchData = this._preSearchData.filter((row) => {
             let show = true;
-            for (let i = 0; i < headers.length; i++) {
+            for (let i = 1; i < headers.length; i++) {
                 let fieldName = headers[i].accessor;
                 let fieldValue = row[fieldName];
                 let inputId = 'inp' + fieldName;
-                let inputText = this[inputId].value;
+                let inputText = this[inputId];
 
                 if (fieldValue === '') {//If FieldValue Not Present                
                     show = true;
                 } else {
                     if (headers[i].searchType === "list") {
-                        show = (inputText === '' || fieldValue.toString() === inputText);
-                    } else {
-                        show = fieldValue.toString().toLowerCase().indexOf(inputText.toLowerCase()) > -1;                        
+                        show = (inputText.value === '' || fieldValue.toString() === inputText.value);
+                    } else if (headers[i].searchType === "input") {
+                        show = fieldValue.toString().toLowerCase().indexOf(inputText.value.toLowerCase()) > -1;
+                    } else if (headers[i].searchType === "date") {
+                        if (inputText !== '') {
+                            inputText = inputText.toString().split("-")[2] + "-" +
+                                inputText.toString().split("-")[1] + "-" +
+                                inputText.toString().split("-")[0];
+                            show = (fieldValue.toString() === inputText);
+                        }
                     }
-                    // show = fieldValue.toString().toLowerCase().indexOf(inputText.toLowerCase()) > -1;
                     if (!show) {//FieldValue Present Still no Match Then Cut the Data
                         break;
                     }
@@ -274,39 +279,59 @@ export default class DataTable extends React.Component {
                         <input type="text" className="form-control"
                             ref={(input) => this[inputId] = input}
                             style={{
-                                width: (header.accessor === 'trainers' || header.accessor === 'attendees')?
-                                (parseInt(header.width.toString().split("px")[0])*2)+"px" :
-                                header.width,
+                                width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
+                                    (parseInt(header.width.toString().split("px")[0]) + 30) + "px" :
+                                    header.width,
                                 textAlign: "center"
                             }}
                             data-idx={idx}
                         />
                     </td> :
-                    <td key={idx}>
-                        <select ref={(input) => this[inputId] = input} className="btn btn-secondary" style={{
-                            width: header.width,
-                            height : "80%",
-                            textAlign: "center"
-                        }}
-                        >
-                            {(header.accessor === 'duration') ?
-                                fixedValue = this.createList(0.5, 20, 0.5) :
-                                fixedValue
-                            }
-                            <option value="">Select</option>
-                            {fixedValue.map(val => (
-                                <option className="btn btn-light" key={val} value={val}>
-                                    {val}{(header.accessor === 'duration') ? ' Hours' : ''}
-                                </option>
-                            ))}
-                        </select>
-                    </td>
+                    (header.searchType === 'list') ?
+                        <td key={idx}>
+                            <select ref={(input) => this[inputId] = input} className="btn btn-secondary" style={{
+                                width: header.width,
+                                height: "80%",
+                                textAlign: "center"
+                            }} defaultValue="Select"
+                            >
+                                {(header.accessor === 'duration') ?
+                                    fixedValue = this.createList(0.5, 20, 0.5) :
+                                    fixedValue
+                                }
+                                <option value="">Select</option>
+                                {fixedValue.map(val => (
+                                    <option className="btn btn-light" key={val} value={val}>
+                                        {val}{(header.accessor === 'duration') ? ' Hours' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </td> :
+                        (header.searchType === 'date') ?
+                            (console.log(this[inputId], header.accessor),
+                                this[inputId] = (this[inputId] === undefined) ? '' : this[inputId],
+                                <td key={idx}>
+                                    {/* {(this[inputId] === '') ? "2020-01-01" : this[inputId]} */}
+                                    <input type="date" className='form-control'
+                                        name={header.accessor}
+                                        min="2000-01-01"
+                                        onChange={(input) => this[inputId] = input.target.value}
+                                        style={{
+                                        width: "145px",
+                                        height : "37px",
+                                        fontSize: "80%",
+                                    }}
+                                        value={(this[inputId] === '') ? '' : this[inputId]}
+                                        data-idx={idx}
+                                    />
+                                </td>) :
+                            <td key={idx}></td>
             );
 
         });
 
         return (
-            <tr onChange={this.onSearch} style={{height : "80%", width : "100%"}}>
+            <tr onChange={this.onSearch} style={{ height: "80%", width: "100%" }}>
                 {searchInputs}
             </tr>
         );

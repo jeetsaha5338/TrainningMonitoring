@@ -34,21 +34,21 @@ class App extends Component {
 
   componentDidMount() {
     let headers = [
-      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "50px", searchType: "input" },
+      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "50px", searchType: "none" },
       { title: "Topic", accessor: "topicName", index: 1, dataType: "string", width: "100px", searchType: "input" },
       {
         title: "Category", accessor: "category", index: 2, dataType: "string", width: "90px", searchType: "list",
         fixedValue: ['Technical', 'Behavioural', 'Domain Specific', 'Organizational']
       },
       { title: "Duration", accessor: "duration", index: 3, dataType: "number", width: "90px", searchType: "list" },
-      { title: "Start Date", accessor: "startDate", index: 4, dataType: "string", width: "100px", searchType: "list" },
-      { title: "End Date", accessor: "endDate", index: 5, dataType: "string", width: "100px", searchType: "list" },
+      { title: "Start Date", accessor: "startDate", index: 4, dataType: "string", width: "100px", searchType: "date" },
+      { title: "End Date", accessor: "endDate", index: 5, dataType: "string", width: "100px", searchType: "date" },
       {
         title: "Trainer Type", accessor: "trainerType", index: 6, dataType: "string", width: "95px", searchType: "list",
         fixedValue: ['External', 'Internal', 'Self']
       },
       { title: "Trainers", accessor: "trainers", index: 7, dataType: "string", width: "70px", searchType: "input" },
-      { title: "attendees", accessor: "attendees", index: 8, dataType: "string", width: "70px", searchType: "input" },
+      { title: "Attendees", accessor: "attendees", index: 8, dataType: "string", width: "70px", searchType: "input" },
       { title: "Team Name", accessor: "teamName", index: 9, dataType: "string", width: "95px", searchType: "input" },
       {
         title: "Remarks", accessor: "remarks", index: 10, dataType: "string", width: "90px", searchType: "list",
@@ -76,7 +76,7 @@ class App extends Component {
           <DataTable
             // className="data-table"
             className='table table-striped'
-            title="Training Monitoring"
+            title="TRAINING MONITORING"
             keyField="id"
             // edit={true}
             pagination={{
