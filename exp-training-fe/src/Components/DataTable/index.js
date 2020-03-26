@@ -268,6 +268,30 @@ export default class DataTable extends React.Component {
         });
     }
 
+    onAddTopic = (addTopicValue) => {
+        let { headers } = this.state;
+        addTopicValue['trainers'] = addTopicValue['trainers'].toString().split(",").filter(e => !(e === ''));
+        addTopicValue['attendees'] = addTopicValue['attendees'].toString().split(",").filter(e => !(e === ''));
+
+        for (let index = 1; index < headers.length; index++) {
+            if (addTopicValue[headers[index].accessor].length === 0) {
+                console.log(headers[index].accessor, addTopicValue[headers[index].accessor]);
+                alert("Please Enter All The Fields");
+                return;
+            }
+        }
+        addTopicValue['startDate'] = addTopicValue['startDate'].toString().split("-")[2] + "-" +
+            addTopicValue['startDate'].toString().split("-")[1] + "-" +
+            addTopicValue['startDate'].toString().split("-")[0];
+
+        addTopicValue['endDate'] = addTopicValue['endDate'].toString().split("-")[2] + "-" +
+            addTopicValue['endDate'].toString().split("-")[1] + "-" +
+            addTopicValue['endDate'].toString().split("-")[0];
+
+        console.log("Go To DB With:", addTopicValue);
+        this.onClickAddTopic();
+    }
+
     createList = (low, high, diff) => {
         let list = [];
         for (let i = low; i <= high; i = i + diff) {
@@ -343,7 +367,7 @@ export default class DataTable extends React.Component {
         });
 
         return (
-            <tr onChange={this.onSearch} style={{ height: "80%", width: "100%" }}>
+            <tr onChange={this.onSearch} style={{ height: "80%", width: "70%" }}>
                 {searchInputs}
             </tr>
         );
@@ -380,10 +404,10 @@ export default class DataTable extends React.Component {
                 this.onGotoPage(1);
             });
             this._preSearchData = null;
-            this.width = "100%";
+            this.width = "80%";
         } else {
             this._preSearchData = this.state.data;
-            this.width = "80%";
+            // this.width = "60%";
             this.setState({
                 search: true
             });
@@ -399,8 +423,10 @@ export default class DataTable extends React.Component {
         if (!addTopic) {
             return null;
         }
-        let addTopicValue = {topicName: "",category: "",duration: 0,startDate: "",endDate: "",
-            trainerType: "",trainers: [],attendees: [],teamName: "",remarks: ""};
+        let addTopicValue = {
+            topicName: "", category: "", duration: "", startDate: "", endDate: "",
+            trainerType: "", trainers: "", attendees: "", teamName: "", remarks: ""
+        };
 
         let addInputs = headers.map((header, idx) => {
             // let inputId = 'inp' + header.accessor;
@@ -410,7 +436,7 @@ export default class DataTable extends React.Component {
                     <td key={idx} >
                         <input type="text" className="form-control"
                             // ref={(input) => this[inputId] = input}
-                            onChange={(input) => { addTopicValue[header.accessor] = input.target.value }}
+                            onChange={(input) => addTopicValue[header.accessor] = input.target.value}
                             style={{
                                 width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
                                     (parseInt(header.width.toString().split("px")[0]) + 30) + "px" :
@@ -457,7 +483,7 @@ export default class DataTable extends React.Component {
                                 />
                             </td> :
                             <td key={idx}>
-                                <button onClick={() => {console.log(addTopicValue)}} className='btn btn-success'>
+                                <button onClick={() => this.onAddTopic(addTopicValue)} className='btn btn-success'>
                                     Save
                                 </button>
                             </td>
@@ -466,7 +492,7 @@ export default class DataTable extends React.Component {
         });
 
         return (
-            <tr /* onChange={this.onSearch} */ style={{ height: "80%", width: "100%" }}>
+            <tr /* onChange={this.onSearch} */ style={{ height: "80%", width: "70%" }}>
                 {addInputs}
             </tr >
         );
