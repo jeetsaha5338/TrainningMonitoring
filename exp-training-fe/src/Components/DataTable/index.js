@@ -4,19 +4,7 @@ import './datatable.css';
 import Pagination from '../Pagination';
 
 export default class DataTable extends React.Component {
-    _preSearchData = null
-    _addTopicValue = {
-        topicName: "",
-        category: "",
-        duration: 0,
-        startDate: "",
-        endDate: "",
-        trainerType: "",
-        trainers: [],
-        attendees: [],
-        teamName: "",
-        remarks: ""
-    }
+    _preSearchData = null;
     constructor(props) {
         super(props);
         this.state = {
