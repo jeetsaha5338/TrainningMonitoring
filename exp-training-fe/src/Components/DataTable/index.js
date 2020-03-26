@@ -5,7 +5,18 @@ import Pagination from '../Pagination';
 
 export default class DataTable extends React.Component {
     _preSearchData = null
-
+    _addTopicValue = {
+        topicName: "",
+        category: "",
+        duration: 0,
+        startDate: "",
+        endDate: "",
+        trainerType: "",
+        trainers: [],
+        attendees: [],
+        teamName: "",
+        remarks: ""
+    }
     constructor(props) {
         super(props);
         this.state = {
@@ -18,6 +29,7 @@ export default class DataTable extends React.Component {
             search: false,
             pageLength: this.props.pagination.pageLength || 5,
             currentPage: 1,
+            addTopic: false,
         }
 
         this.keyField = props.keyField || "id"; // TODO: revisit this logic
@@ -317,15 +329,15 @@ export default class DataTable extends React.Component {
                                         min="2000-01-01"
                                         onChange={(input) => this[inputId] = input.target.value}
                                         style={{
-                                        width: "145px",
-                                        height : "37px",
-                                        fontSize: "80%",
-                                    }}
+                                            width: "145px",
+                                            height: "37px",
+                                            fontSize: "80%",
+                                        }}
                                         value={(this[inputId] === '') ? '' : this[inputId]}
                                         data-idx={idx}
                                     />
                                 </td>) :
-                            <td key={idx}></td>
+                            <td key={idx}><h4><b>Enter:</b></h4></td>
             );
 
         });
@@ -352,6 +364,7 @@ export default class DataTable extends React.Component {
                 </thead>
                 <tbody /* onDoubleClick={this.onShowEditor} */>
                     {this.renderSearch()}
+                    {this.renderAddForm()}
                     {contentView}
                 </tbody>
             </table>
@@ -377,13 +390,108 @@ export default class DataTable extends React.Component {
         }
     }
 
+    onClickAddTopic = () => {
+        this.setState({ addTopic: !this.state.addTopic });
+    }
+
+    renderAddForm = () => {
+        let { addTopic, headers } = this.state;
+        if (!addTopic) {
+            return null;
+        }
+        let addTopicValue = {topicName: "",category: "",duration: 0,startDate: "",endDate: "",
+            trainerType: "",trainers: [],attendees: [],teamName: "",remarks: ""};
+
+        let addInputs = headers.map((header, idx) => {
+            // let inputId = 'inp' + header.accessor;
+            let fixedValue = header.fixedValue || [];
+            return (
+                (header.searchType === 'input') ?
+                    <td key={idx} >
+                        <input type="text" className="form-control"
+                            // ref={(input) => this[inputId] = input}
+                            onChange={(input) => { addTopicValue[header.accessor] = input.target.value }}
+                            style={{
+                                width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
+                                    (parseInt(header.width.toString().split("px")[0]) + 30) + "px" :
+                                    header.width,
+                                textAlign: "center"
+                            }}
+                            data-idx={idx}
+                        />
+                    </td> :
+                    (header.searchType === 'list') ?
+                        <td key={idx}>
+                            <select defaultValue="Select" className="btn btn-secondary" style={{
+                                width: header.width,
+                                height: "80%",
+                                textAlign: "center"
+                            }}
+                                onChange={(input) => { addTopicValue[header.accessor] = input.target.value }}
+                            // ref={(input) => this[inputId] = input}
+                            >
+                                {(header.accessor === 'duration') ?
+                                    fixedValue = this.createList(0.5, 20, 0.5) :
+                                    fixedValue
+                                }
+                                <option value="">Select</option>
+                                {fixedValue.map(val => (
+                                    <option className="btn btn-light" key={val} value={val}>
+                                        {val}{(header.accessor === 'duration') ? ' Hours' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </td> :
+                        (header.searchType === 'date') ?
+                            <td key={idx}>
+                                <input type="date" className='form-control'
+                                    name={header.accessor}
+                                    min="2000-01-01"
+                                    onChange={(input) => addTopicValue[header.accessor] = input.target.value}
+                                    style={{
+                                        width: "145px",
+                                        height: "37px",
+                                        fontSize: "80%",
+                                    }}
+                                    data-idx={idx}
+                                />
+                            </td> :
+                            <td key={idx}>
+                                <button onClick={() => {console.log(addTopicValue)}} className='btn btn-success'>
+                                    Save
+                                </button>
+                            </td>
+            );
+
+        });
+
+        return (
+            <tr /* onChange={this.onSearch} */ style={{ height: "80%", width: "100%" }}>
+                {addInputs}
+            </tr >
+        );
+    }
+
+    onClickCancel = () => {
+        if (this.state.search) { this.onClickSearch() }
+        else if (this.state.addTopic) { this.onClickAddTopic() }
+    }
+
     renderToolbar = () => {
         return (
             <div className="toolbar">
                 <h4>{this.state.title}</h4>
-                <button onClick={this.onClickSearch} className='btn btn-primary'>
-                    Search
-                </button>
+                {(this.state.addTopic || this.state.search) ?
+                    <button onClick={this.onClickCancel} className='btn btn-danger' id='cancelbtn'>
+                        Cancel
+                    </button> :
+                    <><button onClick={this.onClickAddTopic} className='btn btn-dark' id='addbtn'>
+                        Add Topic
+                    </button>
+                        <button onClick={this.onClickSearch} className='btn btn-secondary' id='searchbtn'>
+                            Search
+                    </button></>
+                }
             </div>
 
         );
@@ -424,7 +532,7 @@ export default class DataTable extends React.Component {
     /* static getDerivedStateFromProps(nextProps, prevState) {
         if (nextProps.data.length != prevState.data.length) {
             return {
-                headers: nextProps.headers,
+                            headers: nextProps.headers,
                 data: nextProps.data,
                 sortby: prevState.sortby,
                 descending: prevState.descending,
