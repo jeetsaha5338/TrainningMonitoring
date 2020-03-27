@@ -2,6 +2,9 @@ import React, { Component } from 'react';
 import './App.css';
 import DataTable from './Components/DataTable';
 import axios from 'axios';
+import ModalPage from './Components/modal'
+import FooterPage from './Components/FooterPage';
+
 
 class App extends Component {
   constructor(props) {
@@ -55,7 +58,7 @@ class App extends Component {
         fixedValue: ['Excellent', 'Very Good', 'Good', 'Average','Not That Level']
       }
     ];
-    axios.get('http://localhost:8008/Training/Topic/getTopics')
+    axios.get('http://localhost:8080/Training/Topic/getTopics')
       .then(Response => {
         this.setState({
           headers: headers,
@@ -73,10 +76,11 @@ class App extends Component {
     return (
       this.state.ready ?
         <div>
+          
           <DataTable
             // className="data-table"
             className='table table-striped'
-            title="Training Monitoring"
+            title="TRAINING MONITORING PORTAL"
             keyField="id"
             // edit={true}
             pagination={{
@@ -90,6 +94,10 @@ class App extends Component {
             noData="No records!"
           // onUpdate={this.onUpdateTable}
           />
+          <ModalPage /> 
+          {/* <AutocompletePage /> */}
+         {/*  <FooterPage /> */}
+          
         </div>
         : <h2>Loading..</h2>
     );

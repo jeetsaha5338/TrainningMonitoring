@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './datatable.css';
 import Pagination from '../Pagination';
+import ModalPage from '../modal';
 
 export default class DataTable extends React.Component {
     _preSearchData = null
@@ -159,6 +160,9 @@ export default class DataTable extends React.Component {
 
                 return (
                     <td key={index} data-id={id} data-row={rowIdx}>
+                        <a onClick href={id}/>
+                       {/*  {(header.accessor=== 'id')? '':''} */}
+                       
                         {(header.accessor === 'trainers' || header.accessor === 'attendees') ?
                             contents.map((content) => (
                                 content + ", "
@@ -356,9 +360,13 @@ export default class DataTable extends React.Component {
         return (
             <div className="toolbar">
                 <h4>{this.state.title}</h4>
-                <button onClick={this.onClickSearch} className='btn btn-primary'>
+                <div>
+                    <ModalPage/> 
+                    <button onClick={this.onClickSearch} className='btn btn-primary'>
                     Search
-                </button>
+                </button></div>
+                
+                
             </div>
 
         );
