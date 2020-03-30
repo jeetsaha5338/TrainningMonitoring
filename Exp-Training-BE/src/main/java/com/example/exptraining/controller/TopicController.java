@@ -1,12 +1,14 @@
 package com.example.exptraining.controller;
 
 import com.example.exptraining.model.Topic;
+import com.example.exptraining.repository.TopicRepository;
 import com.example.exptraining.service.TopicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @RestController
 @RequestMapping("/Training/Topic")
@@ -15,9 +17,17 @@ public class TopicController {
 
     @Autowired
     private TopicService topicService;
+    @Autowired
+    private TopicRepository topicRepository;
 
     @PostMapping("/addTopic")
     public String saveTopic(@RequestBody Topic topic){
+        Random random = new Random();
+        int randomID = 100 + random.nextInt(20);
+        while(topicRepository.findById(randomID).orElse(null) != null){
+            randomID = 100 + random.nextInt(20);
+        }
+        topic.setId(randomID);
         return topicService.saveTopic(topic);
     }
 

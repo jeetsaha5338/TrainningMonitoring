@@ -55,17 +55,27 @@ class App extends Component {
         fixedValue: ['Excellent', 'Very Good', 'Good', 'Average','Not That Level']
       }
     ];
+    this.setState({ 
+      headers : headers
+    },this.getAllTopics());
+  }
+  
+  getAllTopics = () => {
     axios.get('http://localhost:8008/Training/Topic/getTopics')
       .then(Response => {
         this.setState({
-          headers: headers,
           data: Response.data,
           ready: true
         })
-      }, (error) => {
-        console.log(error);
-      })
-    return
+      }, (error) => console.log(error))
+  }
+
+  addTopic = (addTopicValue) => {
+    axios.post('http://localhost:8008/Training/Topic/addTopic',addTopicValue)
+      .then( Response => {
+        alert(Response.data);
+        this.setState({ ready : false},this.getAllTopics());
+      },(error) => console.log(error))
   }
 
 
@@ -88,6 +98,7 @@ class App extends Component {
             headers={this.state.headers}
             data={this.state.data}
             noData="No records!"
+            addTopic = {this.addTopic}
           // onUpdate={this.onUpdateTable}
           />
         </div>

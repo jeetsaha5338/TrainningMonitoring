@@ -231,10 +231,16 @@ export default class DataTable extends React.Component {
                         show = fieldValue.toString().toLowerCase().indexOf(inputText.value.toLowerCase()) > -1;
                     } else if (headers[i].searchType === "date") {
                         if (inputText !== '') {
-                            inputText = inputText.toString().split("-")[2] + "-" +
-                                inputText.toString().split("-")[1] + "-" +
-                                inputText.toString().split("-")[0];
-                            show = (fieldValue.toString() === inputText);
+                            fieldValue = fieldValue.toString().split("-")[2] + "-" +
+                                fieldValue.toString().split("-")[1] + "-" +
+                                fieldValue.toString().split("-")[0];
+                            
+                            if (headers[i].accessor === 'startDate') {
+                                show = new Date(fieldValue).getTime() >= new Date(inputText).getTime()
+                            } else if (headers[i].accessor === 'endDate'){
+                                show = new Date(fieldValue).getTime() <= new Date(inputText).getTime()
+                            }
+                            // show = (fieldValue.toString() === inputText);
                         }
                     }
                     if (!show) {//FieldValue Present Still no Match Then Cut the Data
@@ -268,6 +274,10 @@ export default class DataTable extends React.Component {
                 return;
             }
         }
+        if (new Date(addTopicValue['endDate']).getTime() < new Date(addTopicValue['startDate']).getTime()) {
+            alert("End Date Should Be Greater");
+            return;
+        }
         addTopicValue['startDate'] = addTopicValue['startDate'].toString().split("-")[2] + "-" +
             addTopicValue['startDate'].toString().split("-")[1] + "-" +
             addTopicValue['startDate'].toString().split("-")[0];
@@ -277,6 +287,7 @@ export default class DataTable extends React.Component {
             addTopicValue['endDate'].toString().split("-")[0];
 
         console.log("Go To DB With:", addTopicValue);
+        this.props.addTopic(addTopicValue);
         this.onClickAddTopic();
     }
 
@@ -410,8 +421,9 @@ export default class DataTable extends React.Component {
         let { addTopic, headers } = this.state;
         if (!addTopic) {
             return null;
-        }
+        };
         let addTopicValue = {
+            id: 0,
             topicName: "", category: "", duration: "", startDate: "", endDate: "",
             trainerType: "", trainers: "", attendees: "", teamName: "", remarks: ""
         };
