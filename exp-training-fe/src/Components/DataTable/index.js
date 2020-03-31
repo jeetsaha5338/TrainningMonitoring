@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {Component, Fragment} from 'react';
 import ReactDOM from 'react-dom';
 import './datatable.css';
 import Pagination from '../Pagination';
 
-export default class DataTable extends React.Component {
+export default class DataTable extends Component {
     _preSearchData = null;
     constructor(props) {
         super(props);
@@ -19,7 +19,7 @@ export default class DataTable extends React.Component {
             search: false,
             addTopic: false,
             editTopic: false,
-            edit_ID : '',
+            edit_ID: '',
         }
 
         this.keyField = props.keyField || "id"; // TODO: revisit this logic
@@ -41,8 +41,8 @@ export default class DataTable extends React.Component {
                     <><button onClick={this.onClickAddTopic} className='btn btn-success' id='addbtn'>
                         Add Topic
                     </button>
-                    <button onClick={this.onClickSearch} className='btn btn-primary' id='searchbtn'>
-                        Search
+                        <button onClick={this.onClickSearch} className='btn btn-primary' id='searchbtn'>
+                            Search
                     </button></>
                 }
             </div>
@@ -158,7 +158,7 @@ export default class DataTable extends React.Component {
         let contentView = data.map((row, rowIdx) => {
             let id = row[this.keyField];
             // let edit = this.state.edit;
-            if(row['id'] === this.state.edit_ID){
+            if (row['id'] === this.state.edit_ID) {
                 return null;
             }
 
@@ -188,11 +188,19 @@ export default class DataTable extends React.Component {
                                 content + ", "
                             )) :
                             (header.accessor === 'id') ?
-                                <span onClick={() => this.onClickEdit(contents)} style={{ cursor: 'pointer'}}>
-                                    {(this.state.editTopic) ? '' :
-                                    <i className='fas fa-edit' style={{color : 'blue'}}></i>}
-                                    <b>{" "+contents}</b>
-                                </span> :
+                                <Fragment>
+                                    <span>
+                                        <b>{contents}</b><br />
+                                    </span>
+                                    <span onClick={() => this.onClickEdit(contents)} style={{ cursor: 'pointer' }}>
+                                        {(this.state.editTopic || this.state.addTopic) ? '' : 
+                                            <i className='fas fa-edit' style={{ color: 'blue' }}></i>}
+                                    </span>&nbsp;&nbsp;
+                                    <span onClick={() => this.onClickDelete(contents)} style={{ cursor: 'pointer' }}>
+                                        {(this.state.editTopic || this.state.addTopic) ? '' : 
+                                            <i className='fa fa-trash' style={{ color: 'red' }}></i>}
+                                    </span>
+                                </Fragment> :
                                 contents
                         }
                         {(header.accessor === 'duration') ? ' Hours' : ''}
@@ -369,7 +377,7 @@ export default class DataTable extends React.Component {
         };
 
         let editTopicValue = data.filter(row => {
-            if(row['id'] === edit_ID){
+            if (row['id'] === edit_ID) {
                 return true;
             }
             return false;
@@ -386,7 +394,7 @@ export default class DataTable extends React.Component {
                     <td key={idx} >
                         <input type="text" className="form-control"
                             // ref={(input) => this[inputId] = input}
-                            defaultValue = {editTopicValue[header.accessor]}
+                            defaultValue={editTopicValue[header.accessor]}
                             onChange={(input) => editTopicValue[header.accessor] = input.target.value}
                             style={{
                                 width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
@@ -400,10 +408,10 @@ export default class DataTable extends React.Component {
                     (header.searchType === 'list') ?
                         <td key={idx}>
                             <select className="btn btn-secondary" style={{
-                                    width: header.width,
-                                    height: "80%",
-                                    textAlign: "center"
-                                }}
+                                width: header.width,
+                                height: "80%",
+                                textAlign: "center"
+                            }}
                                 defaultValue={editTopicValue[header.accessor]}
                                 onChange={(input) => { editTopicValue[header.accessor] = input.target.value }}
                             // ref={(input) => this[inputId] = input}
@@ -425,7 +433,7 @@ export default class DataTable extends React.Component {
                                 <input type="date" className='form-control'
                                     name={header.accessor}
                                     min="2000-01-01"
-                                    defaultValue = {editTopicValue[header.accessor]}
+                                    defaultValue={editTopicValue[header.accessor]}
                                     onChange={(input) => editTopicValue[header.accessor] = input.target.value}
                                     style={{
                                         width: "145px",
@@ -437,7 +445,7 @@ export default class DataTable extends React.Component {
                             </td> :
                             <td key={idx}>
                                 <button onClick={() => this.onUpdate(editTopicValue)} className='btn btn-success'>
-                                    <b>{'Update:'+this.state.edit_ID}</b>
+                                    <b>{'Update:' + this.state.edit_ID}</b>
                                 </button>
                             </td>
             );
@@ -582,7 +590,7 @@ export default class DataTable extends React.Component {
         for (let index = 1; index < headers.length; index++) {
             if (addTopicValue[headers[index].accessor].length === 0) {
                 console.log(headers[index].accessor, addTopicValue[headers[index].accessor]);
-                alert("Please Enter All The Fields : "+headers[index].accessor.toString());
+                alert("Please Enter All The Fields : " + headers[index].accessor.toString());
                 return;
             }
         }
@@ -594,9 +602,14 @@ export default class DataTable extends React.Component {
 
         addTopicValue['endDate'] = this.dateFormatter(addTopicValue['endDate'].toString());
 
-        console.log("Go To DB With:", addTopicValue);
-        this.props.addTopicToDB(addTopicValue);
-        this.onClickAddTopic();
+        // console.log("Go To DB With:", addTopicValue);
+        if (window.confirm("Sure To Add")) {
+            this.props.addTopicToDB(addTopicValue);
+            this.onClickAddTopic();
+        } else {
+            this.onClickAddTopic();
+            this.props.getAllTopicsFromDB();
+        }
     }
 
     onUpdate = (editTopicValue) => {
@@ -607,7 +620,7 @@ export default class DataTable extends React.Component {
         for (let index = 1; index < headers.length; index++) {
             if (editTopicValue[headers[index].accessor].length === 0) {
                 console.log(headers[index].accessor, editTopicValue[headers[index].accessor]);
-                alert("Please Enter All The Fields : "+headers[index].accessor.toString());
+                alert("Please Enter All The Fields : " + headers[index].accessor.toString());
                 return;
             }
         }
@@ -619,11 +632,15 @@ export default class DataTable extends React.Component {
 
         editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString());
 
-        console.log("Go To DB With:", editTopicValue);
-        this.props.updateTopicToDB(editTopicValue);
-        this.onClickEdit('');
+        // console.log("Go To DB With:", editTopicValue);
+        if (window.confirm("Sure To Update")) {
+            this.props.updateTopicToDB(editTopicValue);
+            this.onClickEdit('');
+        } else {
+            this.onClickEdit('');
+            this.props.getAllTopicsFromDB();
+        }
     }
-
 
     createList = (low, high, diff) => {
         let list = [];
@@ -635,8 +652,8 @@ export default class DataTable extends React.Component {
 
     dateFormatter = (format) => {
         return (format.split("-")[2] + "-" +
-        format.toString().split("-")[1] + "-" +
-        format.toString().split("-")[0]).toString();
+            format.toString().split("-")[1] + "-" +
+            format.toString().split("-")[0]).toString();
     }
 
     onClickSearch = (e) => {
@@ -663,10 +680,16 @@ export default class DataTable extends React.Component {
     }
 
     onClickEdit = (edit_ID) => {
-        if(edit_ID === ''){
-            this.setState({ editTopic: false, edit_ID : edit_ID });
-        }else{
-            if(!this.state.editTopic){this.setState({ editTopic: true, edit_ID : edit_ID });}
+        if (edit_ID === '') {
+            this.setState({ editTopic: false, edit_ID: edit_ID });
+        } else {
+            if (!this.state.editTopic) { this.setState({ editTopic: true, edit_ID: edit_ID }); }
+        }
+    }
+
+    onClickDelete = (delete_ID) => {
+        if (window.confirm("Sure To Delete ID :"+delete_ID)) {
+            this.props.deleteTopicFromDB(delete_ID);
         }
     }
 

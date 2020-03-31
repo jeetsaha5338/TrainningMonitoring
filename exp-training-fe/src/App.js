@@ -34,7 +34,7 @@ class App extends Component {
 
   componentDidMount() {
     let headers = [
-      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "60px", searchType: "none" },
+      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "30px", searchType: "none" },
       { title: "Topic", accessor: "topicName", index: 1, dataType: "string", width: "100px", searchType: "input" },
       {
         title: "Category", accessor: "category", index: 2, dataType: "string", width: "90px", searchType: "list",
@@ -86,6 +86,17 @@ class App extends Component {
       },(error) => console.log(error))
   }
 
+  deleteTopic = (delete_ID) => {
+    axios.post('http://localhost:8008/Training/Topic/deleteTopic/'+delete_ID)
+      .then( Response => {
+        alert(Response.data);
+        this.setState({ ready : false},this.getAllTopics());
+      },(error) => console.log(error))
+  }
+
+  fetchAgain = () => {
+    this.setState({ ready : false},this.getAllTopics());
+  }
 
   render() {
     return (
@@ -99,7 +110,7 @@ class App extends Component {
             // edit={true}
             pagination={{
               enabled: true,
-              pageLength: 8,
+              pageLength: 5,
               type: "long"  // long, short
             }}
             width="80%"
@@ -108,6 +119,8 @@ class App extends Component {
             noData="No records!"
             addTopicToDB = {this.addTopic}
             updateTopicToDB = {this.updateTopic}
+            deleteTopicFromDB = {this.deleteTopic}
+            getAllTopicsFromDB = {this.fetchAgain}
           // onUpdate={this.onUpdateTable}
           />
         </div>
