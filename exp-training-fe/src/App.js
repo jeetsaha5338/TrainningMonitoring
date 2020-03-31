@@ -34,7 +34,7 @@ class App extends Component {
 
   componentDidMount() {
     let headers = [
-      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "50px", searchType: "none" },
+      { title: "Id", accessor: "id", index: 0, dataType: "number", width: "60px", searchType: "none" },
       { title: "Topic", accessor: "topicName", index: 1, dataType: "string", width: "100px", searchType: "input" },
       {
         title: "Category", accessor: "category", index: 2, dataType: "string", width: "90px", searchType: "list",
@@ -44,7 +44,7 @@ class App extends Component {
       { title: "Start Date", accessor: "startDate", index: 4, dataType: "string", width: "100px", searchType: "date" },
       { title: "End Date", accessor: "endDate", index: 5, dataType: "string", width: "100px", searchType: "date" },
       {
-        title: "Trainer Type", accessor: "trainerType", index: 6, dataType: "string", width: "95px", searchType: "list",
+        title: "Trainer Type", accessor: "trainerType", index: 6, dataType: "string", width: "100px", searchType: "list",
         fixedValue: ['External', 'Internal', 'Self']
       },
       { title: "Trainers", accessor: "trainers", index: 7, dataType: "string", width: "70px", searchType: "input" },
@@ -78,6 +78,14 @@ class App extends Component {
       },(error) => console.log(error))
   }
 
+  updateTopic = (editTopicValue) => {
+    axios.post('http://localhost:8008/Training/Topic/updateTopic',editTopicValue)
+      .then( Response => {
+        alert(Response.data);
+        this.setState({ ready : false},this.getAllTopics());
+      },(error) => console.log(error))
+  }
+
 
   render() {
     return (
@@ -91,14 +99,15 @@ class App extends Component {
             // edit={true}
             pagination={{
               enabled: true,
-              pageLength: 5,
+              pageLength: 8,
               type: "long"  // long, short
             }}
             width="80%"
             headers={this.state.headers}
             data={this.state.data}
             noData="No records!"
-            addTopic = {this.addTopic}
+            addTopicToDB = {this.addTopic}
+            updateTopicToDB = {this.updateTopic}
           // onUpdate={this.onUpdateTable}
           />
         </div>

@@ -27,4 +27,8 @@ public class TopicService {
         topicRepo.deleteById(id);
         return "Deleted Topic With ID : "+id;
     }
+    public String updateTopic(Topic topic){
+        topicRepo.save(topic);
+        return "Updated Topic With ID : "+topic.getId();
+    }
 }

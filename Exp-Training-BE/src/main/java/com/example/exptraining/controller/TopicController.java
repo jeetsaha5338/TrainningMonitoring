@@ -85,9 +85,9 @@ public class TopicController {
         return topicService.deleteTopic(id);
     }
 
-    @PostMapping("/EditTopic")
-    public String editTopic(@RequestBody Topic topic){
-        return topicService.saveTopic(topic);
+    @PostMapping("/updateTopic")
+    public String updateTopic(@RequestBody Topic topic){
+        return topicService.updateTopic(topic);
     }
 }
 

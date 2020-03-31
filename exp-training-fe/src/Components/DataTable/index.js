@@ -14,10 +14,12 @@ export default class DataTable extends React.Component {
             pagedData: props.data,
             sortby: null,
             descending: null,
-            search: false,
             pageLength: this.props.pagination.pageLength || 5,
             currentPage: 1,
+            search: false,
             addTopic: false,
+            editTopic: false,
+            edit_ID : '',
         }
 
         this.keyField = props.keyField || "id"; // TODO: revisit this logic
@@ -28,28 +30,47 @@ export default class DataTable extends React.Component {
         this.pagination = this.props.pagination || {};
     }
 
-    onDragOver = (e) => {
-        e.preventDefault();
+    renderToolbar = () => {
+        return (
+            <div className="toolbar">
+                <h4>{this.state.title}</h4>
+                {(this.state.addTopic || this.state.search || this.state.editTopic) ?
+                    <button onClick={this.onClickCancel} className='btn btn-danger' id='cancelbtn'>
+                        Cancel
+                    </button> :
+                    <><button onClick={this.onClickAddTopic} className='btn btn-success' id='addbtn'>
+                        Add Topic
+                    </button>
+                    <button onClick={this.onClickSearch} className='btn btn-primary' id='searchbtn'>
+                        Search
+                    </button></>
+                }
+            </div>
+
+        );
     }
 
-    onDragStart = (e, source) => {
-        e.dataTransfer.setData('text/plain', source);
-    }
+    renderTable = () => {
+        let headerView = this.renderTableHeader();
+        let contentView = this.state.data.length > 0
+            ? this.renderContent()
+            : this.renderNoData();
 
-    onDrop = (e, target) => {
-        e.preventDefault();
-        let source = e.dataTransfer.getData('text/plain');
-        let headers = [...this.state.headers];
-        let srcHeader = headers[source];
-        let targetHeader = headers[target];
-
-        let temp = srcHeader.index;
-        srcHeader.index = targetHeader.index;
-        targetHeader.index = temp;
-
-        this.setState({
-            headers
-        });
+        return (
+            <table className="data-inner-table">
+                <thead onClick={this.onSort} className='thead-dark'>
+                    <tr>
+                        {headerView}
+                    </tr>
+                </thead>
+                <tbody /* onDoubleClick={this.onShowEditor} */>
+                    {this.renderSearch()}
+                    {this.renderAddForm()}
+                    {this.renderEditForm()}
+                    {contentView}
+                </tbody>
+            </table>
+        );
     }
 
     renderTableHeader = () => {
@@ -63,9 +84,9 @@ export default class DataTable extends React.Component {
             let title = header.title;
             let accessor = header.accessor;
             let width = header.width;
-
+            let arrow;
             if (this.state.sortby === index) {
-                title += this.state.descending ? '\u2193' : '\u2191';
+                arrow = this.state.descending ? (<i className='fas fa-arrow-down'></i>) : <i className='fas fa-arrow-up'></i>;
             }
 
             return (
@@ -78,7 +99,7 @@ export default class DataTable extends React.Component {
                     onDragOver={this.onDragOver}
                     onDrop={(e) => { this.onDrop(e, index) }}>
                     <span draggable data-col={accessor} className="header-cell" style={{ width: width, textAlign: "center" }}>
-                        {title}
+                        {title + ' '}{arrow}
                     </span>
                 </th>
             );
@@ -137,6 +158,9 @@ export default class DataTable extends React.Component {
         let contentView = data.map((row, rowIdx) => {
             let id = row[this.keyField];
             // let edit = this.state.edit;
+            if(row['id'] === this.state.edit_ID){
+                return null;
+            }
 
             let tds = headers.map((header, index) => {
                 let contents = row[header.accessor];
@@ -163,7 +187,14 @@ export default class DataTable extends React.Component {
                             contents.map((content) => (
                                 content + ", "
                             )) :
-                            contents}
+                            (header.accessor === 'id') ?
+                                <span onClick={() => this.onClickEdit(contents)} style={{ cursor: 'pointer'}}>
+                                    {(this.state.editTopic) ? '' :
+                                    <i className='fas fa-edit' style={{color : 'blue'}}></i>}
+                                    <b>{" "+contents}</b>
+                                </span> :
+                                contents
+                        }
                         {(header.accessor === 'duration') ? ' Hours' : ''}
                     </td>
                 );
@@ -175,128 +206,6 @@ export default class DataTable extends React.Component {
             );
         });
         return contentView;
-    }
-
-    onSort = (e) => {
-        let data = this.state.data.slice(); // Give new array
-        let dom = ReactDOM.findDOMNode(e.target);
-        let colIndex = dom.parentNode.cellIndex === undefined ? dom.cellIndex : dom.parentNode.cellIndex;
-        let colTitle = e.target.dataset.col;
-
-
-        let descending = !this.state.descending;
-
-        data.sort((a, b) => {
-            let sortVal = 0;
-            if (a[colTitle] < b[colTitle]) {
-                sortVal = -1;
-            } else if (a[colTitle] > b[colTitle]) {
-                sortVal = 1;
-            }
-            if (descending) {
-                sortVal = sortVal * -1;
-            }
-            return sortVal;
-        });
-
-        this.setState({
-            data: data,
-            pagedData: data,
-            sortby: colIndex,
-            descending
-        }, () => {
-            if (this.pagination.enabled) {
-                this.onGotoPage(1);
-            }
-        });
-    }
-
-    onSearch = (e) => {
-        let { headers } = this.state;
-        // Filter the records
-        let searchData = this._preSearchData.filter((row) => {
-            let show = true;
-            for (let i = 1; i < headers.length; i++) {
-                let fieldName = headers[i].accessor;
-                let fieldValue = row[fieldName];
-                let inputId = 'inp' + fieldName;
-                let inputText = this[inputId];
-
-                if (fieldValue === '') {//If FieldValue Not Present                
-                    show = true;
-                } else {
-                    if (headers[i].searchType === "list") {
-                        show = (inputText.value === '' || fieldValue.toString() === inputText.value);
-                    } else if (headers[i].searchType === "input") {
-                        show = fieldValue.toString().toLowerCase().indexOf(inputText.value.toLowerCase()) > -1;
-                    } else if (headers[i].searchType === "date") {
-                        if (inputText !== '') {
-                            fieldValue = fieldValue.toString().split("-")[2] + "-" +
-                                fieldValue.toString().split("-")[1] + "-" +
-                                fieldValue.toString().split("-")[0];
-                            
-                            if (headers[i].accessor === 'startDate') {
-                                show = new Date(fieldValue).getTime() >= new Date(inputText).getTime()
-                            } else if (headers[i].accessor === 'endDate'){
-                                show = new Date(fieldValue).getTime() <= new Date(inputText).getTime()
-                            }
-                            // show = (fieldValue.toString() === inputText);
-                        }
-                    }
-                    if (!show) {//FieldValue Present Still no Match Then Cut the Data
-                        break;
-                    }
-                }
-            }
-            return show;
-        });
-        // Update the state
-        this.setState({
-            data: searchData,
-            pagedData: searchData,
-            totalRecords: searchData.length
-        }, () => {
-            if (this.pagination.enabled) {
-                this.onGotoPage(1);
-            }
-        });
-    }
-
-    onAddTopic = (addTopicValue) => {
-        let { headers } = this.state;
-        addTopicValue['trainers'] = addTopicValue['trainers'].toString().split(",").filter(e => !(e === ''));
-        addTopicValue['attendees'] = addTopicValue['attendees'].toString().split(",").filter(e => !(e === ''));
-
-        for (let index = 1; index < headers.length; index++) {
-            if (addTopicValue[headers[index].accessor].length === 0) {
-                console.log(headers[index].accessor, addTopicValue[headers[index].accessor]);
-                alert("Please Enter All The Fields");
-                return;
-            }
-        }
-        if (new Date(addTopicValue['endDate']).getTime() < new Date(addTopicValue['startDate']).getTime()) {
-            alert("End Date Should Be Greater");
-            return;
-        }
-        addTopicValue['startDate'] = addTopicValue['startDate'].toString().split("-")[2] + "-" +
-            addTopicValue['startDate'].toString().split("-")[1] + "-" +
-            addTopicValue['startDate'].toString().split("-")[0];
-
-        addTopicValue['endDate'] = addTopicValue['endDate'].toString().split("-")[2] + "-" +
-            addTopicValue['endDate'].toString().split("-")[1] + "-" +
-            addTopicValue['endDate'].toString().split("-")[0];
-
-        console.log("Go To DB With:", addTopicValue);
-        this.props.addTopic(addTopicValue);
-        this.onClickAddTopic();
-    }
-
-    createList = (low, high, diff) => {
-        let list = [];
-        for (let i = low; i <= high; i = i + diff) {
-            list.push(i);
-        }
-        return list;
     }
 
     renderSearch = () => {
@@ -372,51 +281,6 @@ export default class DataTable extends React.Component {
         );
     }
 
-    renderTable = () => {
-        let headerView = this.renderTableHeader();
-        let contentView = this.state.data.length > 0
-            ? this.renderContent()
-            : this.renderNoData();
-
-        return (
-            <table className="data-inner-table">
-                <thead onClick={this.onSort} className='thead-dark'>
-                    <tr>
-                        {headerView}
-                    </tr>
-                </thead>
-                <tbody /* onDoubleClick={this.onShowEditor} */>
-                    {this.renderSearch()}
-                    {this.renderAddForm()}
-                    {contentView}
-                </tbody>
-            </table>
-        );
-    }
-
-    onClickSearch = (e) => {
-        if (this.state.search) {
-            this.setState({
-                data: this._preSearchData,
-                search: false
-            }, () => {
-                this.onGotoPage(1);
-            });
-            this._preSearchData = null;
-            this.width = "80%";
-        } else {
-            this._preSearchData = this.state.data;
-            // this.width = "60%";
-            this.setState({
-                search: true
-            });
-        }
-    }
-
-    onClickAddTopic = () => {
-        this.setState({ addTopic: !this.state.addTopic });
-    }
-
     renderAddForm = () => {
         let { addTopic, headers } = this.state;
         if (!addTopic) {
@@ -483,7 +347,7 @@ export default class DataTable extends React.Component {
                                 />
                             </td> :
                             <td key={idx}>
-                                <button onClick={() => this.onAddTopic(addTopicValue)} className='btn btn-success'>
+                                <button onClick={() => this.onSave(addTopicValue)} className='btn btn-success'>
                                     Save
                                 </button>
                             </td>
@@ -498,29 +362,318 @@ export default class DataTable extends React.Component {
         );
     }
 
+    renderEditForm = () => {
+        let { data, edit_ID, editTopic, headers } = this.state;
+        if (!editTopic) {
+            return null;
+        };
+
+        let editTopicValue = data.filter(row => {
+            if(row['id'] === edit_ID){
+                return true;
+            }
+            return false;
+        })[0];
+        editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString())
+        editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString())
+
+
+        let editInputs = headers.map((header, idx) => {
+            // let inputId = 'inp' + header.accessor;
+            let fixedValue = header.fixedValue || [];
+            return (
+                (header.searchType === 'input') ?
+                    <td key={idx} >
+                        <input type="text" className="form-control"
+                            // ref={(input) => this[inputId] = input}
+                            defaultValue = {editTopicValue[header.accessor]}
+                            onChange={(input) => editTopicValue[header.accessor] = input.target.value}
+                            style={{
+                                width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
+                                    (parseInt(header.width.toString().split("px")[0]) + 30) + "px" :
+                                    header.width,
+                                textAlign: "center"
+                            }}
+                            data-idx={idx}
+                        />
+                    </td> :
+                    (header.searchType === 'list') ?
+                        <td key={idx}>
+                            <select className="btn btn-secondary" style={{
+                                    width: header.width,
+                                    height: "80%",
+                                    textAlign: "center"
+                                }}
+                                defaultValue={editTopicValue[header.accessor]}
+                                onChange={(input) => { editTopicValue[header.accessor] = input.target.value }}
+                            // ref={(input) => this[inputId] = input}
+                            >
+                                {(header.accessor === 'duration') ?
+                                    fixedValue = this.createList(0.5, 20, 0.5) :
+                                    fixedValue
+                                }
+                                {/* <option value="">Select</option> */}
+                                {fixedValue.map(val => (
+                                    <option className="btn btn-light" key={val} value={val}>
+                                        {val}{(header.accessor === 'duration') ? ' Hours' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </td> :
+                        (header.searchType === 'date') ?
+                            <td key={idx}>
+                                <input type="date" className='form-control'
+                                    name={header.accessor}
+                                    min="2000-01-01"
+                                    defaultValue = {editTopicValue[header.accessor]}
+                                    onChange={(input) => editTopicValue[header.accessor] = input.target.value}
+                                    style={{
+                                        width: "145px",
+                                        height: "37px",
+                                        fontSize: "80%",
+                                    }}
+                                    data-idx={idx}
+                                />
+                            </td> :
+                            <td key={idx}>
+                                <button onClick={() => this.onUpdate(editTopicValue)} className='btn btn-success'>
+                                    <b>{'Update:'+this.state.edit_ID}</b>
+                                </button>
+                            </td>
+            );
+
+        });
+
+        return (
+            <tr /* onChange={this.onSearch} */ style={{ height: "80%", width: "70%" }}>
+                {editInputs}
+            </tr >
+        );
+    }
+
+    onDragOver = (e) => {
+        e.preventDefault();
+    }
+
+    onDragStart = (e, source) => {
+        e.dataTransfer.setData('text/plain', source);
+    }
+
+    onDrop = (e, target) => {
+        e.preventDefault();
+        let source = e.dataTransfer.getData('text/plain');
+        let headers = [...this.state.headers];
+        let srcHeader = headers[source];
+        let targetHeader = headers[target];
+
+        let temp = srcHeader.index;
+        srcHeader.index = targetHeader.index;
+        targetHeader.index = temp;
+
+        this.setState({
+            headers
+        });
+    }
+
+    onSort = (e) => {
+        let data = this.state.data.slice(); // Give new array
+        let dom = ReactDOM.findDOMNode(e.target);
+        let colIndex = dom.parentNode.cellIndex === undefined ? dom.cellIndex : dom.parentNode.cellIndex;
+        let colTitle = e.target.dataset.col;
+        let descending = !this.state.descending;
+
+        if (colTitle === 'startDate' || colTitle === 'endDate') {
+            data.sort((a, b) => {
+                let sortVal = 0;
+                let dateA = this.dateFormatter(a[colTitle].toString());
+
+                let dateB = this.dateFormatter(b[colTitle].toString());
+
+                if (new Date(dateA).getTime() < new Date(dateB).getTime()) {
+                    sortVal = -1;
+                } else if (new Date(dateA).getTime() > new Date(dateB).getTime()) {
+                    sortVal = 1;
+                }
+                if (descending) {
+                    sortVal = sortVal * -1;
+                }
+                return sortVal;
+            });
+        } else {
+            data.sort((a, b) => {
+                let sortVal = 0;
+                if (a[colTitle] < b[colTitle]) {
+                    sortVal = -1;
+                } else if (a[colTitle] > b[colTitle]) {
+                    sortVal = 1;
+                }
+                if (descending) {
+                    sortVal = sortVal * -1;
+                }
+                return sortVal;
+            });
+        }
+
+        this.setState({
+            data: data,
+            pagedData: data,
+            sortby: colIndex,
+            descending
+        }, () => {
+            if (this.pagination.enabled) {
+                this.onGotoPage(1);
+            }
+        });
+    }
+
+    onSearch = (e) => {
+        let { headers } = this.state;
+        // Filter the records
+        let searchData = this._preSearchData.filter((row) => {
+            let show = true;
+            for (let i = 1; i < headers.length; i++) {
+                let fieldName = headers[i].accessor;
+                let fieldValue = row[fieldName];
+                let inputId = 'inp' + fieldName;
+                let inputText = this[inputId];
+
+                if (fieldValue === '') {//If FieldValue Not Present                
+                    show = true;
+                } else {
+                    if (headers[i].searchType === "list") {
+                        show = (inputText.value === '' || fieldValue.toString() === inputText.value);
+                    } else if (headers[i].searchType === "input") {
+                        show = fieldValue.toString().toLowerCase().indexOf(inputText.value.toLowerCase()) > -1;
+                    } else if (headers[i].searchType === "date") {
+                        if (inputText !== '') {
+                            fieldValue = this.dateFormatter(fieldValue.toString());
+                            if (headers[i].accessor === 'startDate') {
+                                show = new Date(fieldValue).getTime() >= new Date(inputText).getTime()
+                            } else if (headers[i].accessor === 'endDate') {
+                                show = new Date(fieldValue).getTime() <= new Date(inputText).getTime()
+                            }
+                            // show = (fieldValue.toString() === inputText);
+                        }
+                    }
+                    if (!show) {//FieldValue Present Still no Match Then Cut the Data
+                        break;
+                    }
+                }
+            }
+            return show;
+        });
+        // Update the state
+        this.setState({
+            data: searchData,
+            pagedData: searchData,
+            totalRecords: searchData.length
+        }, () => {
+            if (this.pagination.enabled) {
+                this.onGotoPage(1);
+            }
+        });
+    }
+
+    onSave = (addTopicValue) => {
+        let { headers } = this.state;
+        addTopicValue['trainers'] = addTopicValue['trainers'].toString().split(",").filter(e => !(e === ''));
+        addTopicValue['attendees'] = addTopicValue['attendees'].toString().split(",").filter(e => !(e === ''));
+
+        for (let index = 1; index < headers.length; index++) {
+            if (addTopicValue[headers[index].accessor].length === 0) {
+                console.log(headers[index].accessor, addTopicValue[headers[index].accessor]);
+                alert("Please Enter All The Fields : "+headers[index].accessor.toString());
+                return;
+            }
+        }
+        if (new Date(addTopicValue['endDate']).getTime() < new Date(addTopicValue['startDate']).getTime()) {
+            alert("End Date Should Be Greater");
+            return;
+        }
+        addTopicValue['startDate'] = this.dateFormatter(addTopicValue['startDate'].toString());
+
+        addTopicValue['endDate'] = this.dateFormatter(addTopicValue['endDate'].toString());
+
+        console.log("Go To DB With:", addTopicValue);
+        this.props.addTopicToDB(addTopicValue);
+        this.onClickAddTopic();
+    }
+
+    onUpdate = (editTopicValue) => {
+        let { headers } = this.state;
+        editTopicValue['trainers'] = editTopicValue['trainers'].toString().split(",").filter(e => !(e === ''));
+        editTopicValue['attendees'] = editTopicValue['attendees'].toString().split(",").filter(e => !(e === ''));
+
+        for (let index = 1; index < headers.length; index++) {
+            if (editTopicValue[headers[index].accessor].length === 0) {
+                console.log(headers[index].accessor, editTopicValue[headers[index].accessor]);
+                alert("Please Enter All The Fields : "+headers[index].accessor.toString());
+                return;
+            }
+        }
+        if (new Date(editTopicValue['endDate']).getTime() < new Date(editTopicValue['startDate']).getTime()) {
+            alert("End Date Should Be Greater");
+            return;
+        }
+        editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString());
+
+        editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString());
+
+        console.log("Go To DB With:", editTopicValue);
+        this.props.updateTopicToDB(editTopicValue);
+        this.onClickEdit('');
+    }
+
+
+    createList = (low, high, diff) => {
+        let list = [];
+        for (let i = low; i <= high; i = i + diff) {
+            list.push(i);
+        }
+        return list;
+    }
+
+    dateFormatter = (format) => {
+        return (format.split("-")[2] + "-" +
+        format.toString().split("-")[1] + "-" +
+        format.toString().split("-")[0]).toString();
+    }
+
+    onClickSearch = (e) => {
+        if (this.state.search) {
+            this.setState({
+                data: this._preSearchData,
+                search: false
+            }, () => {
+                this.onGotoPage(1);
+            });
+            this._preSearchData = null;
+            this.width = "80%";
+        } else {
+            this._preSearchData = this.state.data;
+            // this.width = "60%";
+            this.setState({
+                search: true
+            });
+        }
+    }
+
+    onClickAddTopic = () => {
+        this.setState({ addTopic: !this.state.addTopic });
+    }
+
+    onClickEdit = (edit_ID) => {
+        if(edit_ID === ''){
+            this.setState({ editTopic: false, edit_ID : edit_ID });
+        }else{
+            if(!this.state.editTopic){this.setState({ editTopic: true, edit_ID : edit_ID });}
+        }
+    }
+
     onClickCancel = () => {
         if (this.state.search) { this.onClickSearch() }
         else if (this.state.addTopic) { this.onClickAddTopic() }
-    }
-
-    renderToolbar = () => {
-        return (
-            <div className="toolbar">
-                <h4>{this.state.title}</h4>
-                {(this.state.addTopic || this.state.search) ?
-                    <button onClick={this.onClickCancel} className='btn btn-danger' id='cancelbtn'>
-                        Cancel
-                    </button> :
-                    <><button onClick={this.onClickAddTopic} className='btn btn-dark' id='addbtn'>
-                        Add Topic
-                    </button>
-                        <button onClick={this.onClickSearch} className='btn btn-secondary' id='searchbtn'>
-                            Search
-                    </button></>
-                }
-            </div>
-
-        );
+        else if (this.state.editTopic) { this.onClickEdit('') }
     }
 
     getPagedData = (pageNo, pageLength) => {
@@ -555,6 +708,8 @@ export default class DataTable extends React.Component {
             this.onGotoPage(this.state.currentPage);
         }
     }
+
+
     /* static getDerivedStateFromProps(nextProps, prevState) {
         if (nextProps.data.length != prevState.data.length) {
             return {
