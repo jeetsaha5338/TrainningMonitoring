@@ -19,7 +19,7 @@ export default class DataTable extends Component {
             search: false,
             addTopic: false,
             editTopic: false,
-            edit_ID: '',
+            edit_ID: ''
         }
 
         this.keyField = props.keyField || "id"; // TODO: revisit this logic
@@ -153,12 +153,13 @@ export default class DataTable extends Component {
 
     renderContent = () => {
 
-        let { headers, data, pagedData } = this.state;
+        let { headers, data, pagedData, editTopic} = this.state;
         data = this.pagination.enabled ? pagedData : data;
         let contentView = data.map((row, rowIdx) => {
             let id = row[this.keyField];
             // let edit = this.state.edit;
-            if (row['id'] === this.state.edit_ID) {
+            
+            if (row['id'].toString() === this.state.edit_ID && editTopic) {
                 return null;
             }
 
@@ -189,17 +190,14 @@ export default class DataTable extends Component {
                             )) :
                             (header.accessor === 'id') ?
                                 <Fragment>
-                                    <span>
-                                        <b>{contents}</b><br />
-                                    </span>
-                                    <span onClick={() => this.onClickEdit(contents)} style={{ cursor: 'pointer' }}>
-                                        {(this.state.editTopic || this.state.addTopic) ? '' : 
-                                            <i className='fas fa-edit' style={{ color: 'blue' }}></i>}
+                                    <b data-id={id}>{contents}</b><br/>
+                                    {(row['id'].toString() === this.state.edit_ID)?
+                                    <><span onClick={() => this.onClickEdit(contents.toString())} style={{ cursor: 'pointer' }}>
+                                        <i className='fas fa-edit' style={{ color: 'blue' }}></i>
                                     </span>&nbsp;&nbsp;
-                                    <span onClick={() => this.onClickDelete(contents)} style={{ cursor: 'pointer' }}>
-                                        {(this.state.editTopic || this.state.addTopic) ? '' : 
-                                            <i className='fa fa-trash' style={{ color: 'red' }}></i>}
-                                    </span>
+                                    <span onClick={() => this.onClickDelete(contents.toString())} style={{ cursor: 'pointer' }}>
+                                        <i className='fa fa-trash' style={{ color: 'red' }}></i>
+                                    </span></> : ''}
                                 </Fragment> :
                                 contents
                         }
@@ -208,7 +206,8 @@ export default class DataTable extends Component {
                 );
             });
             return (
-                <tr key={rowIdx} style={{ textAlign: "center" }}>
+                <tr key={rowIdx} style={{ textAlign: "center",cursor : "pointer" }} 
+                    onClick = {this.onClickRowData}>
                     {tds}
                 </tr>
             );
@@ -371,17 +370,19 @@ export default class DataTable extends Component {
     }
 
     renderEditForm = () => {
-        let { data, edit_ID, editTopic, headers } = this.state;
-        if (!editTopic) {
+        let { data, editTopic, headers } = this.state;
+        
+        if (editTopic === false) {
             return null;
         };
-
+        
         let editTopicValue = data.filter(row => {
-            if (row['id'] === edit_ID) {
+            if (row['id'].toString() === this.state.edit_ID) {
                 return true;
             }
             return false;
         })[0];
+        
         editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString())
         editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString())
 
@@ -676,14 +677,25 @@ export default class DataTable extends Component {
     }
 
     onClickAddTopic = () => {
-        this.setState({ addTopic: !this.state.addTopic });
+        this.setState({ addTopic: !this.state.addTopic },() => {this.onClickEdit('')});
     }
 
-    onClickEdit = (edit_ID) => {
-        if (edit_ID === '') {
-            this.setState({ editTopic: false, edit_ID: edit_ID });
+    onClickRowData = (event) => {
+        if(this.state.editTopic){
+            return;
+        }
+        if(this.state.edit_ID === event.target.dataset.id+''){
+            this.setState({edit_ID : ''})
+        }else if(event.target.dataset.id !== undefined){
+            this.setState({edit_ID : event.target.dataset.id+''})
+        }
+    }
+
+    onClickEdit = (id) => {
+        if (id === '') {
+            this.setState({ edit_ID: id, editTopic: false });
         } else {
-            if (!this.state.editTopic) { this.setState({ editTopic: true, edit_ID: edit_ID }); }
+            this.setState({ editTopic: true, edit_ID : id });
         }
     }
 
