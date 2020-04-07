@@ -19,7 +19,7 @@ class App extends Component {
   }
 
 
-  /* onUpdateTable = (field, id, value) => {
+  onUpdateTable = (field, id, value) => {
     let data = this.state.data.slice();
     let updateRow = this.state.data.find((d) => {
       return d["id"] === id;
@@ -31,7 +31,7 @@ class App extends Component {
       edit: null,
       data: data
     });
-  } */
+  } 
 
   // todo:
 
@@ -56,7 +56,13 @@ class App extends Component {
       {
         title: "Remarks", accessor: "remarks", index: 10, dataType: "string", width: "90px", searchType: "list",
         fixedValue: ['Excellent', 'Very Good', 'Good', 'Average','Not That Level']
-      }
+      },
+      { title: "Options", accessor: "options", index: 11, dataType: "number", width: "50px",cell: {
+        type: "button",
+        style: {
+          "width": "50px",
+        }
+      } }
     ];
     axios.get('http://localhost:8080/Training/Topic/getTopics')
       .then(Response => {
@@ -92,7 +98,7 @@ class App extends Component {
             headers={this.state.headers}
             data={this.state.data}
             noData="No records!"
-          // onUpdate={this.onUpdateTable}
+           onUpdate={this.onUpdateTable}
           />
           <ModalPage /> 
           {/* <AutocompletePage /> */}

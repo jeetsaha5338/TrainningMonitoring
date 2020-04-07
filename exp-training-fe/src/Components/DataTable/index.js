@@ -98,7 +98,7 @@ export default class DataTable extends React.Component {
         );
     }
 
-    /* onUpdate = (e) => {
+    onUpdate = (e) => {
         e.preventDefault();
         let input = e.target.firstChild;
         let header = this.state.headers[this.state.edit.cell];
@@ -128,7 +128,7 @@ export default class DataTable extends React.Component {
                cell: e.target.cellIndex
            }
        })
-   } */
+   } 
 
 
     renderContent = () => {
