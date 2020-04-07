@@ -50,10 +50,7 @@ class App extends Component {
       { title: "Trainers", accessor: "trainers", index: 7, dataType: "string", width: "70px", searchType: "input" },
       { title: "Attendees", accessor: "attendees", index: 8, dataType: "string", width: "70px", searchType: "input" },
       { title: "Team Name", accessor: "teamName", index: 9, dataType: "string", width: "95px", searchType: "input" },
-      {
-        title: "Remarks", accessor: "remarks", index: 10, dataType: "string", width: "90px", searchType: "list",
-        fixedValue: ['Excellent', 'Very Good', 'Good', 'Average','Not That Level']
-      }
+      { title: "Remarks", accessor: "remarks", index: 10, dataType: "string", width: "90px", searchType: "input"}
     ];
     this.setState({ 
       headers : headers

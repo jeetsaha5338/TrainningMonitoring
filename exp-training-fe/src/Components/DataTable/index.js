@@ -1,4 +1,4 @@
-import React, {Component, Fragment} from 'react';
+import React, { Component, Fragment } from 'react';
 import ReactDOM from 'react-dom';
 import './datatable.css';
 import Pagination from '../Pagination';
@@ -33,17 +33,17 @@ export default class DataTable extends Component {
     renderToolbar = () => {
         return (
             <div className="toolbar">
-                <h4>{this.state.title}</h4>
+                <h4><b>{this.state.title}</b></h4>
                 {(this.state.addTopic || this.state.search || this.state.editTopic) ?
                     <button onClick={this.onClickCancel} className='btn btn-danger' id='cancelbtn'>
-                        Cancel
+                        <b>Cancel</b>
                     </button> :
                     <><button onClick={this.onClickAddTopic} className='btn btn-success' id='addbtn'>
-                        Add Topic
+                        <b>Add Topic</b>
                     </button>
                         <button onClick={this.onClickSearch} className='btn btn-primary' id='searchbtn'>
-                            Search
-                    </button></>
+                            <b>Search</b>
+                        </button></>
                 }
             </div>
 
@@ -66,7 +66,6 @@ export default class DataTable extends Component {
                 <tbody /* onDoubleClick={this.onShowEditor} */>
                     {this.renderSearch()}
                     {this.renderAddForm()}
-                    {this.renderEditForm()}
                     {contentView}
                 </tbody>
             </table>
@@ -153,61 +152,58 @@ export default class DataTable extends Component {
 
     renderContent = () => {
 
-        let { headers, data, pagedData, editTopic} = this.state;
+        let { headers, data, pagedData, editTopic, edit_ID } = this.state;
         data = this.pagination.enabled ? pagedData : data;
         let contentView = data.map((row, rowIdx) => {
             let id = row[this.keyField];
             // let edit = this.state.edit;
-            
-            if (row['id'].toString() === this.state.edit_ID && editTopic) {
-                return null;
-            }
-
-            let tds = headers.map((header, index) => {
-                let contents = row[header.accessor];
-
-                /* if (this.props.edit) {
-                    if (header.dataType && (header.dataType === "number" ||
-                        header.dataType === "string") &&
-                        header.accessor !== this.keyField) {
-                        if (edit && edit.row === rowIdx && edit.cell === index) {
-                            content = (
-                                <form onSubmit={this.onUpdate}>
-                                    <input type="text" defaultValue={content}
-                                        onKeyUp={this.onFormReset} />
-                                </form>
-                            );
+            let tds = (row['id'].toString() === edit_ID && editTopic) ? this.renderEditForm() :
+                (headers.map((header, index) => {
+                    let contents = row[header.accessor];
+                    if (header.accessor === 'trainers' || header.accessor === 'attendees') {
+                        if (typeof (contents) === 'string') {
+                            contents = contents.split(',');
                         }
-
-                    }
-                } */
-
-                return (
-                    <td key={index} data-id={id} data-row={rowIdx}>
-                        {(header.accessor === 'trainers' || header.accessor === 'attendees') ?
-                            contents.map((content) => (
-                                content + ", "
-                            )) :
-                            (header.accessor === 'id') ?
-                                <Fragment>
-                                    <b data-id={id}>{contents}</b><br/>
-                                    {(row['id'].toString() === this.state.edit_ID)?
-                                    <><span onClick={() => this.onClickEdit(contents.toString())} style={{ cursor: 'pointer' }}>
-                                        <i className='fas fa-edit' style={{ color: 'blue' }}></i>
-                                    </span>&nbsp;&nbsp;
-                                    <span onClick={() => this.onClickDelete(contents.toString())} style={{ cursor: 'pointer' }}>
+                        contents = contents.map((content) => (content + ", "))
+                    } else if (header.accessor === 'id') {
+                        contents = <Fragment>
+                            <b data-id={id}>{contents}</b><br />
+                            {(row['id'].toString() === edit_ID) ?
+                                <><span onClick={() => this.onClickEdit(edit_ID.toString())} style={{ cursor: 'pointer' }}>
+                                    <i className='fas fa-edit' style={{ color: 'blue' }}></i>
+                                </span>&nbsp;&nbsp;
+                                        <span onClick={() => this.onClickDelete(edit_ID.toString())} style={{ cursor: 'pointer' }}>
                                         <i className='fa fa-trash' style={{ color: 'red' }}></i>
                                     </span></> : ''}
-                                </Fragment> :
-                                contents
+                        </Fragment>
+                    }
+                    if (header.accessor === 'duration') { contents += ' Hours'; }
+
+                    /* if (this.props.edit) {
+                        if (header.dataType && (header.dataType === "number" ||
+                            header.dataType === "string") &&
+                            header.accessor !== this.keyField) {
+                            if (edit && edit.row === rowIdx && edit.cell === index) {
+                                contents = (
+                                    <form onSubmit={this.onUpdate}>
+                                        <input type="text" defaultValue={contents}
+                                            onKeyUp={this.onFormReset} />
+                                    </form>
+                                );
+                            }
+    
                         }
-                        {(header.accessor === 'duration') ? ' Hours' : ''}
-                    </td>
-                );
-            });
+                    } */
+
+                    return (
+                        <td key={index} data-id={id} data-row={rowIdx}>
+                            {contents}
+                        </td>
+                    );
+                }));
             return (
-                <tr key={rowIdx} style={{ textAlign: "center",cursor : "pointer" }} 
-                    onClick = {this.onClickRowData}>
+                <tr key={rowIdx} style={{ textAlign: "center", cursor: "pointer" }}
+                    onClick={this.onClickRowData}>
                     {tds}
                 </tr>
             );
@@ -259,8 +255,7 @@ export default class DataTable extends Component {
                             </select>
                         </td> :
                         (header.searchType === 'date') ?
-                            (console.log(this[inputId], header.accessor),
-                                this[inputId] = (this[inputId] === undefined) ? '' : this[inputId],
+                            (this[inputId] = (this[inputId] === undefined) ? '' : this[inputId],
                                 <td key={idx}>
                                     {/* {(this[inputId] === '') ? "2020-01-01" : this[inputId]} */}
                                     <input type="date" className='form-control'
@@ -370,24 +365,22 @@ export default class DataTable extends Component {
     }
 
     renderEditForm = () => {
-        let { data, editTopic, headers } = this.state;
-        
+        let { data, editTopic, edit_ID, headers } = this.state;
+
         if (editTopic === false) {
             return null;
         };
-        
+
         let editTopicValue = data.filter(row => {
-            if (row['id'].toString() === this.state.edit_ID) {
+            if (row['id'].toString() === edit_ID) {
                 return true;
             }
             return false;
         })[0];
-        
-        editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString())
-        editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString())
 
+        let editedTopicValue = this.createDemoTopic();
 
-        let editInputs = headers.map((header, idx) => {
+        let editInputFields = headers.map((header, idx) => {
             // let inputId = 'inp' + header.accessor;
             let fixedValue = header.fixedValue || [];
             return (
@@ -396,7 +389,7 @@ export default class DataTable extends Component {
                         <input type="text" className="form-control"
                             // ref={(input) => this[inputId] = input}
                             defaultValue={editTopicValue[header.accessor]}
-                            onChange={(input) => editTopicValue[header.accessor] = input.target.value}
+                            onChange={(input) => editedTopicValue[header.accessor] = input.target.value}
                             style={{
                                 width: (header.accessor === 'trainers' || header.accessor === 'attendees') ?
                                     (parseInt(header.width.toString().split("px")[0]) + 30) + "px" :
@@ -414,7 +407,7 @@ export default class DataTable extends Component {
                                 textAlign: "center"
                             }}
                                 defaultValue={editTopicValue[header.accessor]}
-                                onChange={(input) => { editTopicValue[header.accessor] = input.target.value }}
+                                onChange={(input) => { editedTopicValue[header.accessor] = input.target.value }}
                             // ref={(input) => this[inputId] = input}
                             >
                                 {(header.accessor === 'duration') ?
@@ -434,8 +427,9 @@ export default class DataTable extends Component {
                                 <input type="date" className='form-control'
                                     name={header.accessor}
                                     min="2000-01-01"
-                                    defaultValue={editTopicValue[header.accessor]}
-                                    onChange={(input) => editTopicValue[header.accessor] = input.target.value}
+                                    defaultValue={this.dateFormatter(editTopicValue[header.accessor].toString())}
+                                    onChange={(input) =>
+                                        editedTopicValue[header.accessor] = this.dateFormatter(input.target.value.toString())}
                                     style={{
                                         width: "145px",
                                         height: "37px",
@@ -445,7 +439,7 @@ export default class DataTable extends Component {
                                 />
                             </td> :
                             <td key={idx}>
-                                <button onClick={() => this.onUpdate(editTopicValue)} className='btn btn-success'>
+                                <button onClick={() => this.onUpdate(editTopicValue,editedTopicValue)} className='btn btn-success'>
                                     <b>{'Update:' + this.state.edit_ID}</b>
                                 </button>
                             </td>
@@ -453,11 +447,7 @@ export default class DataTable extends Component {
 
         });
 
-        return (
-            <tr /* onChange={this.onSearch} */ style={{ height: "80%", width: "70%" }}>
-                {editInputs}
-            </tr >
-        );
+        return editInputFields;
     }
 
     onDragOver = (e) => {
@@ -471,6 +461,8 @@ export default class DataTable extends Component {
     onDrop = (e, target) => {
         e.preventDefault();
         let source = e.dataTransfer.getData('text/plain');
+        if(source.toString() === '0'){ target = 0;}
+        else if(target.toString() === '0'){ target = source;}
         let headers = [...this.state.headers];
         let srcHeader = headers[source];
         let targetHeader = headers[target];
@@ -603,7 +595,6 @@ export default class DataTable extends Component {
 
         addTopicValue['endDate'] = this.dateFormatter(addTopicValue['endDate'].toString());
 
-        // console.log("Go To DB With:", addTopicValue);
         if (window.confirm("Sure To Add")) {
             this.props.addTopicToDB(addTopicValue);
             this.onClickAddTopic();
@@ -613,8 +604,14 @@ export default class DataTable extends Component {
         }
     }
 
-    onUpdate = (editTopicValue) => {
+    onUpdate = (editTopicValue,editedTopicValue) => {
+             
         let { headers } = this.state;
+
+        for (let index = 1; index < headers.length; index++) {
+            editTopicValue[headers[index].accessor] = editedTopicValue[headers[index].accessor] || editTopicValue[headers[index].accessor];
+        }
+        
         editTopicValue['trainers'] = editTopicValue['trainers'].toString().split(",").filter(e => !(e === ''));
         editTopicValue['attendees'] = editTopicValue['attendees'].toString().split(",").filter(e => !(e === ''));
 
@@ -629,15 +626,14 @@ export default class DataTable extends Component {
             alert("End Date Should Be Greater");
             return;
         }
-        editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString());
+        /*  editTopicValue['startDate'] = this.dateFormatter(editTopicValue['startDate'].toString());
+ 
+         editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString()); */
 
-        editTopicValue['endDate'] = this.dateFormatter(editTopicValue['endDate'].toString());
-
-        // console.log("Go To DB With:", editTopicValue);
         if (window.confirm("Sure To Update")) {
             this.props.updateTopicToDB(editTopicValue);
             this.onClickEdit('');
-        } else {
+        } else {            
             this.onClickEdit('');
             this.props.getAllTopicsFromDB();
         }
@@ -649,6 +645,23 @@ export default class DataTable extends Component {
             list.push(i);
         }
         return list;
+    }
+
+    createDemoTopic = () => {
+        let demoTopic = {
+            'id' : null,
+            'topicName' : null,
+            'category' : null,
+            'duration' : null,
+            'startDate' : null,
+            'endDate' : null,
+            'trainerType' : null,
+            'trainers' : null,
+            'attendees' : null,
+            'teamName' : null,
+            'remarks' : null
+        } 
+        return demoTopic;
     }
 
     dateFormatter = (format) => {
@@ -669,46 +682,47 @@ export default class DataTable extends Component {
             this.width = "80%";
         } else {
             this._preSearchData = this.state.data;
-            // this.width = "60%";
             this.setState({
-                search: true
+                search: true,
+                editTopic: false,
+                edit_ID: ''
             });
         }
     }
 
     onClickAddTopic = () => {
-        this.setState({ addTopic: !this.state.addTopic },() => {this.onClickEdit('')});
+        this.setState({ addTopic: !this.state.addTopic });
     }
 
     onClickRowData = (event) => {
-        if(this.state.editTopic){
+        if (this.state.editTopic || this.state.addTopic) {
             return;
         }
-        if(this.state.edit_ID === event.target.dataset.id+''){
-            this.setState({edit_ID : ''})
-        }else if(event.target.dataset.id !== undefined){
-            this.setState({edit_ID : event.target.dataset.id+''})
+        if (this.state.edit_ID === event.target.dataset.id + '') {
+            this.setState({ edit_ID: '' })
+        } else if (event.target.dataset.id !== undefined) {
+            this.setState({ edit_ID: event.target.dataset.id + '' })
         }
     }
 
     onClickEdit = (id) => {
         if (id === '') {
-            this.setState({ edit_ID: id, editTopic: false });
+            this.setState({edit_ID: id, editTopic: false});
         } else {
-            this.setState({ editTopic: true, edit_ID : id });
+            this.setState({editTopic: true, edit_ID: id});
         }
     }
 
     onClickDelete = (delete_ID) => {
-        if (window.confirm("Sure To Delete ID :"+delete_ID)) {
+        if (window.confirm("Sure To Delete ID :" + delete_ID)) {
             this.props.deleteTopicFromDB(delete_ID);
         }
     }
 
     onClickCancel = () => {
-        if (this.state.search) { this.onClickSearch() }
-        else if (this.state.addTopic) { this.onClickAddTopic() }
+        if (this.state.addTopic) { this.onClickAddTopic() }
         else if (this.state.editTopic) { this.onClickEdit('') }
+        else if (this.state.search) { this.onClickSearch() }
     }
 
     getPagedData = (pageNo, pageLength) => {
